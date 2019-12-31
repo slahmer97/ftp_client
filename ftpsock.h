@@ -16,9 +16,9 @@
 #include <fcntl.h>
 #define MAX_BUFF_SIZE 512
 
-typedef struct  __datasocket__ _datasocket;
+typedef struct  __socket__ _con_socket;
 typedef struct __controlsocket__ _controlsocket;
-struct __datasocket__ {
+struct __socket__ {
     int fd;
     struct sockaddr_in _host_addr;
     struct hostent* _host;
@@ -26,12 +26,14 @@ struct __datasocket__ {
 
 };
 
+/*
 struct __controlsocket__{
     int fd;
     struct sockaddr_in _host_addr;
     unsigned short _port;
     uint32_t _addr;
 };
+ */
 
 void init_data_socket();
 int receive_message(char *);
