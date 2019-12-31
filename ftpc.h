@@ -18,13 +18,13 @@ enum FTP_RESP_CODE {
     ENTERING_PASSIVE_MODE = 227,
 };
 enum FTP_C_CMD{
-    OPEN,
+    OPEN,//DONE
     DIR,
     SHOW,
-    CIAO,
-    EXIT,
-    DEBUG_ON,
-    DEBUG_OFF,
+    CIAO,//DONE
+    EXIT,//DONE
+    DEBUG_ON,//DONE
+    DEBUG_OFF,//DONE
     PASSIVE_ON,
     PASSIVE_OFF,
     GET_FILE,
@@ -41,10 +41,16 @@ enum Mode {
     ACTIVE,
     PASSIVE,
 };
+enum STATUS{
+    CONNECTED,
+    DISCONNECTED,
+};
 
-
+extern enum STATUS status;
 extern enum Mode _mode;
 extern int _debug;
+
+void login(int flag);
 void passivef(int flag);
 void debugf(int flag);
 
@@ -55,6 +61,8 @@ enum FTP_C_CMD get_command(const char*);
 uint16_t send_cmd(const char*cmd,const char*args,int print_cmd);
 void send_username(const char*);
 int send_password(const char*);
+void send_ciao();
+void send_dir();
 
 
 

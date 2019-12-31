@@ -43,6 +43,7 @@ enum FTP_C_CMD get_command(const char* cmd){
 }
 void passivef(int flag){ _mode = flag ? PASSIVE : ACTIVE; }
 void debugf(int flag) { _debug = flag; }
+void login(int flag){status = flag ? CONNECTED : DISCONNECTED;}
 
 uint16_t send_cmd(const char*cmd,const char*args,int print_cmd){
     size_t cmdlen = strlen(cmd);
@@ -80,4 +81,10 @@ int send_password(const char*password){
     if(resp == LOGIN_SUCCESS)
         return 1;
     return 0;
+}
+void send_ciao(){
+    send_cmd("QUIT","",1);
+}
+void send_dir(){
+
 }
