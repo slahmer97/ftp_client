@@ -17,7 +17,7 @@
 #define MAX_BUFF_SIZE 512
 
 typedef struct  __socket__ _con_socket;
-typedef struct __controlsocket__ _controlsocket;
+typedef struct __dsock__ _d_sock;
 struct __socket__ {
     int fd;
     struct sockaddr_in _host_addr;
@@ -26,16 +26,17 @@ struct __socket__ {
 
 };
 
-/*
-struct __controlsocket__{
+
+struct __dsock__{
     int fd;
     struct sockaddr_in _host_addr;
-    unsigned short _port;
+    uint16_t _port;
     uint32_t _addr;
 };
- */
 
-void init_data_socket();
+
+uint16_t get_aport();
+uint32_t get_aaddr();
 int receive_message(char *);
 
 void open_data_connection(char* host,uint16_t port);
@@ -45,7 +46,8 @@ void receive_data(char*);
 int send_file(const char*);
 int receive_file(char*);
 
-
+int open_active_connection();
+int open_passive_connection();
 
 
 #endif //FTP_CLIENT_FTPSOCK_H

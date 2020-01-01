@@ -38,12 +38,16 @@ enum FTP_C_CMD get_command(const char* cmd){
         return MKDIR;
     else if(strncmp("rdir",cmd,4) == 0)
         return RMDIR;
+    else if(strncmp("hist",cmd,4) == 0)
+        return HISTORY;
+    else if(strncmp("help",cmd,4) == 0)
+        return HELP;
     return INVALID_CMD;
 
 }
-void passivef(int flag){ _mode = flag ? PASSIVE : ACTIVE; }
-void debugf(int flag) { _debug = flag; }
-void login(int flag){status = flag ? CONNECTED : DISCONNECTED;}
+void passivef(int flag){ _mode_ = flag ? PASSIVE : ACTIVE; }
+void debugf(int flag) { _debug_ = flag; }
+void login(int flag){_status_ = flag ? CONNECTED : DISCONNECTED;}
 
 uint16_t send_cmd(const char*cmd,const char*args,int print_cmd){
     size_t cmdlen = strlen(cmd);
@@ -55,7 +59,7 @@ uint16_t send_cmd(const char*cmd,const char*args,int print_cmd){
     }
     char* send_buff = (char*)malloc(tot);
     snprintf(send_buff,tot,"%s %s\r\n",cmd,args);
-    if(_debug)
+    if(_debug_)
         fprintf(stdout,"[-->] %s",send_buff);
     send_message(send_buff);
 
@@ -87,4 +91,26 @@ void send_ciao(){
 }
 void send_dir(){
 
+}
+
+
+void create_data_channel(const char* line){
+    if(_mode_ == PASSIVE){
+        int ret = open_passive_connection();
+        if(ret < 0)
+            return;
+        uint32_t addr =((uint32_t)0xFFFFFFFF)&((uint32_t)get_aaddr());
+        uint16_t port =((uint16_t)0xFFFF)&((uint16_t)get_aport());
+
+        unsigned char* caddr = (unsigned char*)&addr;
+        unsigned char* cport = (unsigned char*)&port;
+
+        char buff[MAX_FTP_CMD_BUF] = {0};
+        snprintf(buff,MAX_FTP_CMD_BUF,"%d,%d,%d,%d,%d,%d",caddr[0],caddr[1],caddr[2],caddr[3],cport[0],cport[1]);
+        send_cmd("PORT",buff,1);
+    }
+    if(_mode_ == ACTIVE){
+
+
+    }
 }

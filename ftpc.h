@@ -34,7 +34,9 @@ enum FTP_C_CMD{
     CD,
     MKDIR,
     RMDIR,
-    INVALID_CMD
+    INVALID_CMD,//DONE
+    HISTORY,
+    HELP,
 };
 
 enum Mode {
@@ -46,9 +48,9 @@ enum STATUS{
     DISCONNECTED,
 };
 
-extern enum STATUS status;
-extern enum Mode _mode;
-extern int _debug;
+extern enum STATUS _status_;
+extern enum Mode _mode_;
+extern int _debug_;
 
 void login(int flag);
 void passivef(int flag);
@@ -63,6 +65,9 @@ void send_username(const char*);
 int send_password(const char*);
 void send_ciao();
 void send_dir();
+
+
+void create_data_channel(const char*line);
 
 
 

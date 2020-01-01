@@ -10,25 +10,27 @@
 #include <errno.h>
 
 _con_socket sock;
-//_controlsocket controlsocket;
 
-void init_data_socket(){
-    sock.fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock.fd  == -1) {
+_con_socket p_socket;
+_d_sock a_socket;
+
+static void init_tcp_socket(int *fd,struct sockaddr_in * _host_addr){
+    *fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*fd  == -1) {
         fprintf(stderr,"socket creation failed...\n");
         exit(0);
     }
     else
         printf("Datasocket was successfully created\n");
-    bzero(&sock._host_addr, sizeof(sock._host_addr));
+    bzero(_host_addr, sizeof(*_host_addr));
 }
 void open_data_connection(char* host, uint16_t port){
-    init_data_socket();
+    init_tcp_socket(&sock.fd,&sock._host_addr);
     sock._host = gethostbyname(host);
     if(sock._host == NULL){
         close(sock.fd);
         fprintf(stderr,"[-] Lookup Failed: %s\n", hstrerror(ECONNREFUSED));
-        exit(1);
+        return;
     }
     memset((char*)&sock._host_addr,0,sizeof(sock._host_addr));
     sock._host_addr.sin_family = AF_INET;
@@ -36,18 +38,60 @@ void open_data_connection(char* host, uint16_t port){
     sock._host_addr.sin_port = htons(port);
     if (connect(sock.fd, (struct sockaddr*) &sock._host_addr, sizeof(sock._host_addr)) != 0) {
         close(sock.fd);
-        fprintf(stderr,"[-] Can't connect to host\n");
-        exit(1);
+        perror("[-] Can't connect to host\n");
+        return;
     }
     socklen_t len = sizeof(sock._myAddr);
     if( getsockname(sock.fd, (struct sockaddr*)&sock._myAddr, &len) < 0){
         close(sock.fd);
-        fprintf(stderr,"[-] getsockname Error\n");
-        exit(1);
+        perror("[-] getsockname Error\n");
+        return;
     }
     fprintf(stdout,"ftp client RFC-959\n");
     fprintf(stdout,"Connection established, waiting for welcome message...\n");
 }
+
+int open_passive_connection(){
+    init_tcp_socket(&a_socket.fd,&a_socket._host_addr);
+    a_socket._host_addr = sock._host_addr;
+    a_socket._host_addr.sin_port = htons(0);//kernel will randomely chooose a free port for us
+    if(bind(a_socket.fd,(struct sockaddr *)&a_socket._host_addr,sizeof(a_socket._host_addr)) != 0) {
+        //fprintf(stderr, "[-] error when binding socket\n");
+        perror("[-] biding failed\n");
+        close(a_socket.fd);
+        return -1;
+    }
+
+    if (listen(a_socket.fd,1) != 0) { // allow just server connection {one connection}
+        close(a_socket.fd);
+        perror("[-] error when listening socket\n");
+        return -1;
+    }
+
+    socklen_t len = sizeof(a_socket._addr);
+    if (getsockname(a_socket.fd, (struct sockaddr*)&sock._myAddr, &len) < 0) {
+        close(a_socket.fd);
+        perror("[-] error when getsockname\n");
+        return -1;
+    }
+    a_socket._port = sock._myAddr.sin_port;
+    a_socket._addr = sock._myAddr.sin_addr.s_addr;
+    return 1;
+}
+
+int open_active_connection() {
+    return 1;
+}
+
+uint16_t get_aport(){
+    return a_socket._port;
+}
+uint32_t get_aaddr(){
+    return a_socket._addr;
+}
+
+
+
 void destroy_data_socket(){
     close(sock.fd);
 }
