@@ -15,6 +15,10 @@ _con_socket sock;
 _con_socket p_socket;
 _d_sock a_socket;
 
+
+/*
+* Cette fonction initialise une connexion TCP et l'enregistre dans "fd".
+*/
 static void init_tcp_socket(int *fd, struct sockaddr_in *_host_addr)
 {
 	*fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -26,6 +30,10 @@ static void init_tcp_socket(int *fd, struct sockaddr_in *_host_addr)
 	bzero(_host_addr, sizeof(*_host_addr));
 }
 
+/*
+* Cette fonction initialise une connexion avec
+* un serveur FTP "host" sur "port".
+*/
 void open_data_connection(char *host, uint16_t port)
 {
 	init_tcp_socket(&sock.fd, &sock._host_addr);
@@ -59,6 +67,10 @@ void open_data_connection(char *host, uint16_t port)
 		"Connection established, waiting for welcome message...\n");
 }
 
+
+/*
+* Cette fonction ouvre un socket et attend que le serveur FTP se connecte.
+*/
 int open_act_connection()
 {
 	init_tcp_socket(&a_socket.fd, &a_socket._host_addr);
@@ -92,11 +104,17 @@ int open_act_connection()
 	return 1;
 }
 
+/*
+* Renvoie le descripteur de fichier de donnees "fd".
+*/
 int get_afd()
 {
 	return a_socket.fd;
 }
 
+/*
+* Cette fonction verife avec le serveur FTP si le mode passif est possible.
+*/
 int open_pasv_connection()
 {
 	send_message("PASV\r\n");
@@ -135,21 +153,33 @@ int open_pasv_connection()
 	return -22;
 }
 
+/*
+* Renvoie le numero de port de la connexion de commande.
+*/
 uint16_t get_aport()
 {
 	return a_socket._port;
 }
 
+/*
+* Renvoie l'adresse de la connexion de commande.
+*/
 uint32_t get_aaddr()
 {
 	return a_socket._addr;
 }
 
+/*
+* Detruit la connexion tcp des donnees.
+*/
 void destroy_data_socket()
 {
 	close(sock.fd);
 }
 
+/*
+* Cette fonction envoie les donnees de "msg" au serveur FTP.
+*/
 void send_message(const char *msg)
 {
 	char const *buffer = msg;
@@ -176,6 +206,10 @@ void send_message(const char *msg)
 	}
 }
 
+/*
+* Cette fonction recoit les donnees du serveur FTP et les enregistrent
+* dans "msg".
+*/
 int receive_message(char *msg)
 {
 	if (msg == NULL) {

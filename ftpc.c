@@ -7,6 +7,10 @@
 #include <asm/ioctls.h>
 #include <sys/ioctl.h>
 
+/*
+* Cette fonction parse une chaine de caracteres et renvoie
+* la commande FTP correspondante.
+*/
 enum FTP_C_CMD get_command(const char *cmd)
 {
 	if (strncmp("open", cmd, 4) == 0)
@@ -49,21 +53,37 @@ enum FTP_C_CMD get_command(const char *cmd)
 
 }
 
+/*
+* Cette fonction active le mode FTP passif si le flag est vrai,
+* et le mode actif sinon.
+*/
 void passivef(int flag)
 {
 	_mode_ = flag ? PASSIVE : ACTIVE;
 }
 
+/*
+* Cette fonction active le mode de debuggage si le flag est vrai,
+* et le desactive sinon.
+*/
 void debugf(int flag)
 {
 	_debug_ = flag;
 }
 
+/*
+* Cette fonction active le mode connecte si le flag est vrai,
+* et le mode deconnecte sinon.
+*/
 void login(int flag)
 {
 	_status_ = flag ? CONNECTED : DISCONNECTED;
 }
 
+/*
+* Cette fonction envoie la commande "cmd" au serveur FTP,
+* et affiche le message de retour si le flag "print_cmd" est vrai
+*/
 uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 {
 	size_t cmdlen = strlen(cmd);
@@ -97,11 +117,19 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 	return resp_code;
 }
 
+/*
+* Cette fonction envoie une commande USER au serveur FTP,
+* et affiche son message de retour.
+*/
 void send_username(const char *username)
 {
 	uint16_t resp = send_cmd("USER", username, 1);
 }
 
+/*
+* Cette fonction envoie une commande PASS au serveur FTP,
+* et affiche son message de retour.
+*/
 int send_password(const char *password)
 {
 	uint16_t resp = send_cmd("PASS", password, 1);
@@ -110,11 +138,19 @@ int send_password(const char *password)
 	return 0;
 }
 
+/*
+* Cette fonction envoie une commande QUIT au serveur FTP,
+* et affiche son message de retour.
+*/
 void send_ciao()
 {
 	send_cmd("QUIT", "", 1);
 }
 
+/*
+* Cette fonction est appelee a la suite d'une commande DIR de l'utilisateur,
+* l'information de retour est affiche sur stdout
+*/
 void send_dir()
 {
 	int server_fd = create_data_channel("LIST", "", 1);
@@ -126,6 +162,10 @@ void send_dir()
 	save_into_file(server_fd, stdout);
 }
 
+/*
+* Cette fonction est appelee a la suite d'une commande SHOW de l'utilisateur,
+* le fichier de retour est affiche sur stdout.
+*/
 void send_show(const char *file)
 {
 	int server_fd = create_data_channel("RETR", file, 1);
@@ -137,6 +177,10 @@ void send_show(const char *file)
 	save_into_file(server_fd, stdout);
 }
 
+/*
+* Cette fonction cree une connexion TCP si le mode est passif, et
+* attend une connexion du serveur si le mode est en FTP actif.
+*/
 int create_data_channel(const char *cmd, const char *args, int print_cmd)
 {
 	int servFD = -3453;
@@ -176,6 +220,10 @@ int create_data_channel(const char *cmd, const char *args, int print_cmd)
 	return servFD;
 }
 
+/*
+* Cette fonction affiche sur la sortie "out" le contenu
+* du descripteur de fichier "fd".
+*/
 int save_into_file(int fd, FILE * out)
 {
 	ssize_t n;

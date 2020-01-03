@@ -11,6 +11,10 @@ int running = 1;
 int try_count = 0;
 
 void cmd_handler(const char *cmd);
+
+/*
+* Le main !
+*/
 int main()
 {
 	login(0);
@@ -33,6 +37,10 @@ int main()
 	return 0;
 }
 
+/*
+* A chaque nouvelle commande entree par l'utilisateur,
+* cette fonction est appelee pour la geree.
+*/
 void cmd_handler(const char *__cmd)
 {
 	char *tmp = (char *)__cmd;
