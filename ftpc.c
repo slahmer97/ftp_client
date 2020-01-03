@@ -93,6 +93,10 @@ void send_ciao(){
 }
 void send_dir(){
     int server_fd = create_data_channel("LIST","",1);
+    if(server_fd <= 0){
+        fprintf(stdout,"[!] Operation failed [error_code = %d]\n",-server_fd);
+        return;
+    }
     save_into_file(server_fd,stdout);
 }
 void send_show(const char* file){
@@ -105,6 +109,7 @@ void send_show(const char* file){
 }
 
 int create_data_channel(const char* cmd,const char* args,int print_cmd){
+    int servFD = -3453;
     if(_mode_ == ACTIVE){
         int ret = open_act_connection();
         if(ret < 0)
@@ -119,26 +124,23 @@ int create_data_channel(const char* cmd,const char* args,int print_cmd){
         snprintf(buff,MAX_FTP_CMD_BUF,"%d,%d,%d,%d,%d,%d",caddr[0],caddr[1],caddr[2],caddr[3],cport[0],cport[1]);
         send_cmd("PORT",buff,1);
     }
-
+    else if(_mode_ == PASSIVE){
+        servFD = open_pasv_connection();
+        if(servFD < 0)
+            return -1;
+    }
 
     int rep = send_cmd(cmd,args,print_cmd);
     if(rep >= 400){
         return -rep;
     }
 
-    int servFD = -3453;
-    if(_mode_ == PASSIVE){
-        servFD = open_pasv_connection();
-        return -3333;
-    }
-
-    if(_mode_ == ACTIVE){
+    if (_mode_ == ACTIVE){
         struct sockaddr_storage serverStorage;
         socklen_t addr_size = sizeof serverStorage;
         servFD = accept(get_afd(), (struct sockaddr*)&serverStorage, &addr_size);
     }
     return servFD;
-
 }
 
 int save_into_file(int fd,FILE* out){
@@ -154,7 +156,6 @@ int save_into_file(int fd,FILE* out){
     if (fcntl (fd, F_SETFL, flags) < 0) {
         return -1;
     }
-
     struct timeval tv;
     fd_set readfds;
     tv.tv_sec = 0;
@@ -164,7 +165,6 @@ int save_into_file(int fd,FILE* out){
     int rc;
     int ret;
     for (;;) {
-
         rc = select(fd + 1, &readfds, NULL, NULL, &tv);
         if(rc < 0) {
             perror("[-] select rc < 0");

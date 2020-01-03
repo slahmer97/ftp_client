@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "ftpsock.h"
+#include "ftpc.h"
 
 #include <stdlib.h>
 #include <asm/errno.h>
@@ -85,8 +86,43 @@ int get_afd(){
     return a_socket.fd;
 }
 
-int open_pasv_connection() {
-    return 1;
+int open_pasv_connection(){
+    send_message("PASV\r\n");
+    char recBUF[MAX_BUFF_SIZE];
+    char*input;
+    receive_message(recBUF);
+    if(_debug_)
+        fprintf(stdout,"[<--] %s",recBUF);
+
+    char resp[4];resp[3]=0;resp[0]=recBUF[0];resp[1]=recBUF[1];resp[2]=recBUF[2];
+    uint16_t replay_code =(uint16_t) atoi(resp);
+    if(replay_code != 227){
+        fprintf(stdout,"[-] Passive mode rejected by server\n");
+        return -replay_code;
+    }
+    input = recBUF+4;
+    while (*(input++) != '(');
+    char addr[17];
+    addr[16] = 0;
+    for (int i = 0,index=0;i!=4;index++) {
+        if(*input == ','){
+            if(i != 3)
+                addr[index] ='.';
+            else
+                addr[index] = 0;
+            i++;
+        }
+        else
+            addr[index] =*input;
+        input++;
+    }
+
+
+
+
+
+
+    return -22;
 }
 
 uint16_t get_aport(){
