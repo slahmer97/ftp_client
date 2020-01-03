@@ -12,41 +12,41 @@
  * check wiki : https://en.wikipedia.org/wiki/List_of_FTP_server_return_codes
  */
 enum FTP_RESP_CODE {
-    PASSWORD_DEMAND=331,
-    LOGIN_SUCCESS = 230,
-    CLOSING_DATA_CON = 226,
-    FILE_STATUS_OKAY = 150,
-    ENTERING_PASSIVE_MODE = 227,
+	PASSWORD_DEMAND = 331,
+	LOGIN_SUCCESS = 230,
+	CLOSING_DATA_CON = 226,
+	FILE_STATUS_OKAY = 150,
+	ENTERING_PASSIVE_MODE = 227,
 };
-enum FTP_C_CMD{
-    OPEN,//DONE
-    DIR,
-    SHOW,
-    CIAO,//DONE
-    EXIT,//DONE
-    DEBUG_ON,//DONE
-    DEBUG_OFF,//DONE
-    PASSIVE_ON,
-    PASSIVE_OFF,
-    GET_FILE,
-    SEND_FILE,
-    REN_FILE,
-    DEL_FILE,
-    CD,
-    MKDIR,
-    RMDIR,
-    INVALID_CMD,//DONE
-    HISTORY,
-    HELP,
+enum FTP_C_CMD {
+	OPEN,			//DONE
+	DIR,
+	SHOW,
+	CIAO,			//DONE
+	EXIT,			//DONE
+	DEBUG_ON,		//DONE
+	DEBUG_OFF,		//DONE
+	PASSIVE_ON,
+	PASSIVE_OFF,
+	GET_FILE,
+	SEND_FILE,
+	REN_FILE,
+	DEL_FILE,
+	CD,
+	MKDIR,
+	RMDIR,
+	INVALID_CMD,		//DONE
+	HISTORY,
+	HELP,
 };
 
 enum Mode {
-    ACTIVE,
-    PASSIVE,
+	ACTIVE,
+	PASSIVE,
 };
-enum STATUS{
-    CONNECTED,
-    DISCONNECTED,
+enum STATUS {
+	CONNECTED,
+	DISCONNECTED,
 };
 
 extern enum STATUS _status_;
@@ -57,19 +57,17 @@ void login(int flag);
 void passivef(int flag);
 void debugf(int flag);
 
+enum FTP_C_CMD get_command(const char *);
 
-
-enum FTP_C_CMD get_command(const char*);
-
-uint16_t send_cmd(const char*cmd,const char*args,int print_cmd);
-void send_username(const char*);
-int send_password(const char*);
+uint16_t send_cmd(const char *cmd, const char *args, int print_cmd);
+void send_username(const char *);
+int send_password(const char *);
 void send_ciao();
 void send_dir();
-void send_show(const char*);
+void send_show(const char *);
 
-int create_data_channel(const char*cmd,const char*args,int print_cmd);
+int create_data_channel(const char *cmd, const char *args, int print_cmd);
 
-int save_into_file(int fd_source,FILE* out);
+int save_into_file(int fd_source, FILE * out);
 
-#endif //FTP_CLIENT_FTPC_H
+#endif				//FTP_CLIENT_FTPC_H
