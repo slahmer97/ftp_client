@@ -6,6 +6,7 @@
 #define FTP_CLIENT_FTPC_H
 #define MAX_FTP_CMD_BUF 500
 
+#include <bits/types/FILE.h>
 #include "ftpsock.h"
 /*
  * check wiki : https://en.wikipedia.org/wiki/List_of_FTP_server_return_codes
@@ -65,10 +66,10 @@ void send_username(const char*);
 int send_password(const char*);
 void send_ciao();
 void send_dir();
+void send_show(const char*);
 
+int create_data_channel(const char*cmd,const char*args,int print_cmd);
 
-void create_data_channel(const char*line);
-
-
+int save_into_file(int fd_source,FILE* out);
 
 #endif //FTP_CLIENT_FTPC_H

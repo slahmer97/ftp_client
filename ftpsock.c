@@ -51,7 +51,7 @@ void open_data_connection(char* host, uint16_t port){
     fprintf(stdout,"Connection established, waiting for welcome message...\n");
 }
 
-int open_passive_connection(){
+int open_act_connection(){
     init_tcp_socket(&a_socket.fd,&a_socket._host_addr);
     a_socket._host_addr = sock._host_addr;
     a_socket._host_addr.sin_port = htons(0);//kernel will randomely chooose a free port for us
@@ -76,10 +76,16 @@ int open_passive_connection(){
     }
     a_socket._port = sock._myAddr.sin_port;
     a_socket._addr = sock._myAddr.sin_addr.s_addr;
+
+
+
     return 1;
 }
+int get_afd(){
+    return a_socket.fd;
+}
 
-int open_active_connection() {
+int open_pasv_connection() {
     return 1;
 }
 

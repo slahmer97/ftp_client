@@ -12,7 +12,7 @@ int try_count = 0;
 void cmd_handler(const char*cmd);
 int main() {
     login(0);
-    debugf(0); // debug mode in off mode
+    debugf(1); // debug mode in off mode
     passivef(0); // active mode by default
 
 
@@ -23,14 +23,10 @@ int main() {
         else
             fprintf(stdout,"Ftp> ");
         fgets(buff,sizeof(buff),stdin);
+        if(buff[0] == '\n')
+            continue;
         cmd_handler(buff);
     }
-
-
-
-
-
-
     destroy_data_socket();
 
     return 0;
@@ -85,12 +81,14 @@ void cmd_handler(const char*__cmd){
         case DIR:
             if(_status_ == DISCONNECTED)
                 goto login_required;
-            create_data_channel("");
+            send_dir();
             break;
         case SHOW:
             if(_status_ == DISCONNECTED)
                 goto login_required;
-
+            param = command+5;
+            //TODO check if valid file name!
+            send_show((const char*)param);
             break;
         case CIAO:
             if(_status_ == DISCONNECTED){

@@ -14,7 +14,7 @@
 #include <string.h>
 #include <memory.h>
 #include <fcntl.h>
-#define MAX_BUFF_SIZE 512
+#define MAX_BUFF_SIZE 513
 
 typedef struct  __socket__ _con_socket;
 typedef struct __dsock__ _d_sock;
@@ -37,17 +37,20 @@ struct __dsock__{
 
 uint16_t get_aport();
 uint32_t get_aaddr();
+int get_afd();
+
 int receive_message(char *);
 
 void open_data_connection(char* host,uint16_t port);
 void destroy_data_socket();
 void send_message(const char*);
+
 void receive_data(char*);
 int send_file(const char*);
 int receive_file(char*);
 
-int open_active_connection();
-int open_passive_connection();
+int open_act_connection();
+int open_pasv_connection();
 
 
 #endif //FTP_CLIENT_FTPSOCK_H

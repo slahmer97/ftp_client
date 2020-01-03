@@ -4,6 +4,8 @@
 #include "ftpc.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <asm/ioctls.h>
+#include <sys/ioctl.h>
 
 enum FTP_C_CMD get_command(const char* cmd){
     if(strncmp("open",cmd,4) == 0)
@@ -90,15 +92,23 @@ void send_ciao(){
     send_cmd("QUIT","",1);
 }
 void send_dir(){
-
+    int server_fd = create_data_channel("LIST","",1);
+    save_into_file(server_fd,stdout);
+}
+void send_show(const char* file){
+    int server_fd = create_data_channel("RETR",file,1);
+    if(server_fd <= 0){
+        fprintf(stdout,"[!] Operation failed [error_code = %d]\n",-server_fd);
+        return;
+    }
+    save_into_file(server_fd,stdout);
 }
 
-
-void create_data_channel(const char* line){
-    if(_mode_ == PASSIVE){
-        int ret = open_passive_connection();
+int create_data_channel(const char* cmd,const char* args,int print_cmd){
+    if(_mode_ == ACTIVE){
+        int ret = open_act_connection();
         if(ret < 0)
-            return;
+            return -1;
         uint32_t addr =((uint32_t)0xFFFFFFFF)&((uint32_t)get_aaddr());
         uint16_t port =((uint16_t)0xFFFF)&((uint16_t)get_aport());
 
@@ -109,8 +119,80 @@ void create_data_channel(const char* line){
         snprintf(buff,MAX_FTP_CMD_BUF,"%d,%d,%d,%d,%d,%d",caddr[0],caddr[1],caddr[2],caddr[3],cport[0],cport[1]);
         send_cmd("PORT",buff,1);
     }
-    if(_mode_ == ACTIVE){
 
 
+    int rep = send_cmd(cmd,args,print_cmd);
+    if(rep >= 400){
+        return -rep;
     }
+
+    int servFD = -3453;
+    if(_mode_ == PASSIVE){
+        servFD = open_pasv_connection();
+        return -3333;
+    }
+
+    if(_mode_ == ACTIVE){
+        struct sockaddr_storage serverStorage;
+        socklen_t addr_size = sizeof serverStorage;
+        servFD = accept(get_afd(), (struct sockaddr*)&serverStorage, &addr_size);
+    }
+    return servFD;
+
+}
+
+int save_into_file(int fd,FILE* out){
+    ssize_t n;
+    char buff[MAX_BUFF_SIZE];
+
+    int flags;
+    if ((flags = fcntl (fd, F_GETFL, NULL)) < 0) {
+        perror("[-] save_into_file");
+        return -1;
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl (fd, F_SETFL, flags) < 0) {
+        return -1;
+    }
+
+    struct timeval tv;
+    fd_set readfds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100000;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    int rc;
+    int ret;
+    for (;;) {
+
+        rc = select(fd + 1, &readfds, NULL, NULL, &tv);
+        if(rc < 0) {
+            perror("[-] select rc < 0");
+            ret = -1;
+            break;
+        }
+        else if (rc == 0) {
+            ret = 1;
+            break;
+        }
+        else {
+            n = read(fd, buff, MAX_BUFF_SIZE -1);
+            if (n == 0) {
+                ret = 1;
+                break;
+            }
+            else if(n == -1) {
+                perror("[-] select rc < 0");
+                ret = -1;
+                break;
+            }
+            else{
+                fprintf(out,"%s",buff);
+            }
+        }
+    }
+    close(fd);
+    if(out == stdout || out == stderr)
+        fprintf(stdout,"\n");
+    return ret;
 }
