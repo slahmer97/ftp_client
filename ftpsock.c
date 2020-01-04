@@ -15,7 +15,15 @@ _con_socket sock;
 _con_socket p_socket;
 _d_sock a_socket;
 
-
+_con_socket* getsockaddr(){
+    return &sock;
+}
+void init_das(){
+    memset((void*)&a_socket,0,sizeof(_d_sock));
+    memset((void*)&p_socket,0,sizeof(_con_socket));
+    p_socket.fd = -1;
+    a_socket.fd = -1;
+}
 /*
 * Cette fonction initialise une connexion TCP et l'enregistre dans "fd".
 */
@@ -34,32 +42,35 @@ static void init_tcp_socket(int *fd, struct sockaddr_in *_host_addr)
 * Cette fonction initialise une connexion avec
 * un serveur FTP "host" sur "port".
 */
-void open_data_connection(char *host, uint16_t port)
+void open_data_connection(_con_socket* zsock,char *host, uint16_t port)
 {
-	init_tcp_socket(&sock.fd, &sock._host_addr);
-	sock._host = gethostbyname(host);
-	if (sock._host == NULL) {
-		close(sock.fd);
+	init_tcp_socket(&zsock->fd, &zsock->_host_addr);
+    zsock->_host = gethostbyname(host);
+	if (zsock->_host == NULL) {
+		close(zsock->fd);
+        zsock->fd = -1;
 		fprintf(stderr, "[-] Lookup Failed: %s\n",
 			hstrerror(ECONNREFUSED));
 		return;
 	}
-	memset((char *)&sock._host_addr, 0, sizeof(sock._host_addr));
-	sock._host_addr.sin_family = AF_INET;
-	memcpy((char *)&sock._host_addr.sin_addr.s_addr,
+	memset((char *)&zsock->_host_addr, 0, sizeof(sock._host_addr));
+    zsock->_host_addr.sin_family = AF_INET;
+	memcpy((char *)&zsock->_host_addr.sin_addr.s_addr,
 	       (char *)sock._host->h_addr, sock._host->h_length);
-	sock._host_addr.sin_port = htons(port);
+    zsock->_host_addr.sin_port = htons(port);
 	if (connect
-	    (sock.fd, (struct sockaddr *)&sock._host_addr,
-	     sizeof(sock._host_addr)) != 0) {
-		close(sock.fd);
-		perror("[-] Can't connect to host\n");
+	    (zsock->fd, (struct sockaddr *)&zsock->_host_addr,
+	     sizeof(zsock->_host_addr)) != 0) {
+		close(zsock->fd);
+        zsock->fd = -1;
+        perror("[-] Can't connect to host\n");
 		return;
 	}
-	socklen_t len = sizeof(sock._myAddr);
-	if (getsockname(sock.fd, (struct sockaddr *)&sock._myAddr, &len) < 0) {
-		close(sock.fd);
-		perror("[-] getsockname Error\n");
+	socklen_t len = sizeof(zsock->_myAddr);
+	if (getsockname(zsock->fd, (struct sockaddr *)&zsock->_myAddr, &len) < 0) {
+		close(zsock->fd);
+        zsock->fd = -1;
+        perror("[-] getsockname Error\n");
 		return;
 	}
 	fprintf(stdout, "ftp client RFC-959\n");
@@ -82,11 +93,13 @@ int open_act_connection()
 		//fprintf(stderr, "[-] error when binding socket\n");
 		perror("[-] biding failed\n");
 		close(a_socket.fd);
+        a_socket.fd = -1;
 		return -1;
 	}
 
 	if (listen(a_socket.fd, 1) != 0) {	// allow just server connection {one connection}
 		close(a_socket.fd);
+        a_socket.fd = -1;
 		perror("[-] error when listening socket\n");
 		return -1;
 	}
@@ -95,6 +108,7 @@ int open_act_connection()
 	if (getsockname(a_socket.fd, (struct sockaddr *)&sock._myAddr, &len) <
 	    0) {
 		close(a_socket.fd);
+        a_socket.fd = -1;
 		perror("[-] error when getsockname\n");
 		return -1;
 	}
@@ -123,7 +137,6 @@ int open_pasv_connection()
 	receive_message(recBUF);
 	if (_debug_)
 		fprintf(stdout, "[<--] %s", recBUF);
-
 	char resp[4];
 	resp[3] = 0;
 	resp[0] = recBUF[0];
@@ -136,21 +149,14 @@ int open_pasv_connection()
 	}
 	input = recBUF + 4;
 	while (*(input++) != '(') ;
-	char addr[17];
-	addr[16] = 0;
-	for (int i = 0, index = 0; i != 4; index++) {
-		if (*input == ',') {
-			if (i != 3)
-				addr[index] = '.';
-			else
-				addr[index] = 0;
-			i++;
-		} else
-			addr[index] = *input;
-		input++;
-	}
-
-	return -22;
+    int addr1,addr2,addr3,addr4,port1,port2;
+	sscanf(input,"%d,%d,%d,%d,%d,%d).\r\n",&addr1,&addr2,&addr3,&addr4,&port1,&port2);
+	char host[18];
+	snprintf(host,18,"%d.%d.%d.%d",addr1,addr2,addr3,addr4);
+    uint16_t port = port1*1000+port2;
+    open_data_connection(&p_socket,host,port);
+    int ret = p_socket.fd;
+    return ret;
 }
 
 /*
@@ -241,4 +247,15 @@ int receive_file(char *file)
 {
 
 	return 0;
+}
+
+void close_data_connection(){
+    if(a_socket.fd >= 0){
+        close(a_socket.fd);
+        memset((void*)&a_socket,0,sizeof(_d_sock));
+    }
+    if(p_socket.fd >= 0){
+        close(p_socket.fd);
+        memset((void*)&p_socket,0,sizeof(_con_socket));
+    }
 }

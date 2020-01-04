@@ -19,16 +19,16 @@ enum FTP_RESP_CODE {
 	ENTERING_PASSIVE_MODE = 227,
 };
 enum FTP_C_CMD {
-	OPEN,			//DONE
-	DIR,
-	SHOW,
-	CIAO,			//DONE
-	EXIT,			//DONE
-	DEBUG_ON,		//DONE
-	DEBUG_OFF,		//DONE
-	PASSIVE_ON,
-	PASSIVE_OFF,
-	GET_FILE,
+	OPEN,			    //DONE
+	DIR,                //DONE
+	SHOW,               //DONE
+	CIAO,			    //DONE
+	EXIT,			    //DONE
+	DEBUG_ON,		    //DONE
+	DEBUG_OFF,		    //DONE
+	PASSIVE_ON,         // DONE
+	PASSIVE_OFF,        //DONE
+	GET_FILE,           //DONE TODO check..
 	SEND_FILE,
 	REN_FILE,
 	DEL_FILE,
@@ -38,6 +38,8 @@ enum FTP_C_CMD {
 	INVALID_CMD,		//DONE
 	HISTORY,
 	HELP,
+	BINARY,             //DONE
+	ASCII               //DONE
 };
 
 enum Mode {
@@ -59,12 +61,15 @@ void debugf(int flag);
 
 enum FTP_C_CMD get_command(const char *);
 
+uint16_t send_binary();
+uint16_t send_ascii();
 uint16_t send_cmd(const char *cmd, const char *args, int print_cmd);
-void send_username(const char *);
+uint16_t send_username(const char *);
 int send_password(const char *);
 void send_ciao();
 void send_dir();
 void send_show(const char *);
+void get_file(const char*);
 
 int create_data_channel(const char *cmd, const char *args, int print_cmd);
 

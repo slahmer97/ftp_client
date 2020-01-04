@@ -11,6 +11,15 @@
 * Cette fonction parse une chaine de caracteres et renvoie
 * la commande FTP correspondante.
 */
+static char* getFileNameFromPath(const char* path)
+{
+    if(path)
+        for(size_t i = strlen(path) - 1; i; i--)
+            if (path[i] == '/')
+                return (char*)&path[i+1];
+
+    return (char*)path;
+}
 enum FTP_C_CMD get_command(const char *cmd)
 {
 	if (strncmp("open", cmd, 4) == 0)
@@ -49,6 +58,10 @@ enum FTP_C_CMD get_command(const char *cmd)
 		return HISTORY;
 	else if (strncmp("help", cmd, 4) == 0)
 		return HELP;
+    else if (strncmp("binary", cmd, 6) == 0)
+        return BINARY;
+    else if (strncmp("ascii", cmd, 5) == 0)
+        return ASCII;
 	return INVALID_CMD;
 
 }
@@ -117,13 +130,21 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 	return resp_code;
 }
 
+uint16_t send_binary(){
+    return send_cmd("TYPE","I",_debug_);
+}
+uint16_t send_ascii(){
+    return send_cmd("TYPE","A",_debug_);
+}
+
 /*
 * Cette fonction envoie une commande USER au serveur FTP,
 * et affiche son message de retour.
 */
-void send_username(const char *username)
+uint16_t send_username(const char *username)
 {
-	uint16_t resp = send_cmd("USER", username, 1);
+	uint16_t resp = send_cmd("USER", username, _debug_);
+    return resp;
 }
 
 /*
@@ -132,7 +153,7 @@ void send_username(const char *username)
 */
 int send_password(const char *password)
 {
-	uint16_t resp = send_cmd("PASS", password, 1);
+	uint16_t resp = send_cmd("PASS", password, _debug_);
 	if (resp == LOGIN_SUCCESS)
 		return 1;
 	return 0;
@@ -144,7 +165,7 @@ int send_password(const char *password)
 */
 void send_ciao()
 {
-	send_cmd("QUIT", "", 1);
+	send_cmd("QUIT", "", _debug_);
 }
 
 /*
@@ -153,7 +174,7 @@ void send_ciao()
 */
 void send_dir()
 {
-	int server_fd = create_data_channel("LIST", "", 1);
+	int server_fd = create_data_channel("LIST", "", _debug_);
 	if (server_fd <= 0) {
 		fprintf(stdout, "[!] Operation failed [error_code = %d]\n",
 			-server_fd);
@@ -168,18 +189,32 @@ void send_dir()
 */
 void send_show(const char *file)
 {
-	int server_fd = create_data_channel("RETR", file, 1);
+	int server_fd = create_data_channel("RETR", file, _debug_);
 	if (server_fd <= 0) {
 		fprintf(stdout, "[!] Operation failed [error_code = %d]\n",
 			-server_fd);
 		return;
 	}
 	save_into_file(server_fd, stdout);
+	close_data_connection();
+}
+
+void get_file(const char*file){
+    int server_fd = create_data_channel("RETR", file, _debug_);
+    if (server_fd <= 0) {
+        fprintf(stdout, "[!] Operation failed [error_code = %d]\n",
+                -server_fd);
+        return;
+    }
+    getFileNameFromPath(file);
+    FILE* fptr = fopen(file,"w");
+    save_into_file(server_fd, fptr);
+    close_data_connection();
 }
 
 /*
-* Cette fonction cree une connexion TCP si le mode est passif, et
-* attend une connexion du serveur si le mode est en FTP actif.
+* Cette fonction cree une connexion TCP selon le mode courant et
+ * renvoie un descripteur de fichier de socket ou on va recevoir les donnés.
 */
 int create_data_channel(const char *cmd, const char *args, int print_cmd)
 {
@@ -201,7 +236,7 @@ int create_data_channel(const char *cmd, const char *args, int print_cmd)
 		send_cmd("PORT", buff, 1);
 	} else if (_mode_ == PASSIVE) {
 		servFD = open_pasv_connection();
-		if (servFD < 0)
+		if (servFD <= 0)
 			return -1;
 	}
 
@@ -240,8 +275,8 @@ int save_into_file(int fd, FILE * out)
 	}
 	struct timeval tv;
 	fd_set readfds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
 	FD_ZERO(&readfds);
 	FD_SET(fd, &readfds);
 	int rc;
@@ -256,7 +291,8 @@ int save_into_file(int fd, FILE * out)
 			ret = 1;
 			break;
 		} else {
-			n = read(fd, buff, MAX_BUFF_SIZE - 1);
+            memset(buff,0,MAX_BUFF_SIZE);
+            n = read(fd, buff, (MAX_BUFF_SIZE - 1));
 			if (n == 0) {
 				ret = 1;
 				break;
@@ -265,7 +301,9 @@ int save_into_file(int fd, FILE * out)
 				ret = -1;
 				break;
 			} else {
-				fprintf(out, "%s", buff);
+			    char* outt = buff;
+				int writen = fprintf(out, "%s", outt);
+				fprintf(stdout,"received : %zd(bytes), writen : %d(bytes)\n",n,writen);
 			}
 		}
 	}
