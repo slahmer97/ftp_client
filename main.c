@@ -154,17 +154,25 @@ void cmd_handler(const char *__cmd)
 	case CD:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-
+        param = command + 3;
+        send_cd(param);
 		break;
+    case PWD:
+        if (_status_ == DISCONNECTED)
+            goto login_required;
+        send_pwd();
+        break;
 	case MKDIR:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-
+        param = command + 4;
+        send_mkdir(param);
 		break;
 	case RMDIR:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-
+        param = command + 4;
+        send_rmdir(param);
 		break;
 	case INVALID_CMD:
 	default:

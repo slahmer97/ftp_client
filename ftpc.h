@@ -14,9 +14,11 @@
 enum FTP_RESP_CODE {
 	PASSWORD_DEMAND = 331,
 	LOGIN_SUCCESS = 230,
-	CLOSING_DATA_CON = 226,
+	OK = 226,
 	FILE_STATUS_OKAY = 150,
 	ENTERING_PASSIVE_MODE = 227,
+	DIRECTORY_CHANGE_SUCCESS=250,
+	DIRECTORY_CREATED_SUCCESS=257,
 };
 enum FTP_C_CMD {
 	OPEN,			    //DONE
@@ -35,6 +37,7 @@ enum FTP_C_CMD {
 	CD,
 	MKDIR,
 	RMDIR,
+	PWD,
 	INVALID_CMD,		//DONE
 	HISTORY,
 	HELP,
@@ -65,6 +68,10 @@ uint16_t send_binary();
 uint16_t send_ascii();
 uint16_t send_cmd(const char *cmd, const char *args, int print_cmd);
 uint16_t send_username(const char *);
+uint16_t send_cd(const char *);
+uint16_t send_mkdir(const char*);
+uint16_t send_rmdir(const char*);
+uint16_t send_pwd();
 int send_password(const char *);
 void send_ciao();
 void send_dir();

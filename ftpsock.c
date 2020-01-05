@@ -148,7 +148,7 @@ int open_pasv_connection()
 		return -replay_code;
 	}
 	input = recBUF + 4;
-	while (*(input++) != '(') ;
+	while (*(input++) != '(');
     int addr1,addr2,addr3,addr4,port1,port2;
 	sscanf(input,"%d,%d,%d,%d,%d,%d).\r\n",&addr1,&addr2,&addr3,&addr4,&port1,&port2);
 	char host[18];
@@ -220,33 +220,16 @@ int receive_message(char *msg)
 {
 	if (msg == NULL) {
 		fprintf(stderr, "[-] received msg Error : msg = NULL\n");
-		exit(1);
+        return -99999;
 	}
 	memset(msg, 0, MAX_BUFF_SIZE);
 	ssize_t n;
 	n = read(sock.fd, msg, MAX_BUFF_SIZE);
 	if (n < 0) {
 		fprintf(stderr, "[-] received msg Error : N < 0 [%zd] \n", n);
-		exit(1);
+        return n;
 	}
 	return n;
-}
-
-void receive_data(char *data)
-{
-
-}
-
-int send_file(const char *file)
-{
-
-	return 0;
-}
-
-int receive_file(char *file)
-{
-
-	return 0;
 }
 
 void close_data_connection(){
@@ -259,3 +242,4 @@ void close_data_connection(){
         memset((void*)&p_socket,0,sizeof(_con_socket));
     }
 }
+

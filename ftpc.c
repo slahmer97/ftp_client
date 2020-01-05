@@ -50,9 +50,11 @@ enum FTP_C_CMD get_command(const char *cmd)
 		return DEL_FILE;
 	else if (strncmp("cd", cmd, 2) == 0)
 		return CD;
-	else if (strncmp("mdir", cmd, 4) == 0)
+	else if (strncmp("mkd", cmd, 3) == 0)
 		return MKDIR;
-	else if (strncmp("rdir", cmd, 4) == 0)
+    else if (strncmp("pwd", cmd, 3) == 0)
+        return PWD;
+	else if (strncmp("rmd", cmd, 3) == 0)
 		return RMDIR;
 	else if (strncmp("hist", cmd, 4) == 0)
 		return HISTORY;
@@ -144,6 +146,7 @@ uint16_t send_ascii(){
 uint16_t send_username(const char *username)
 {
 	uint16_t resp = send_cmd("USER", username, _debug_);
+
     return resp;
 }
 
@@ -166,6 +169,9 @@ int send_password(const char *password)
 void send_ciao()
 {
 	send_cmd("QUIT", "", _debug_);
+    char recBUF[MAX_BUFF_SIZE];
+    receive_message(recBUF);
+    fprintf(stdout,"%s\n",recBUF);
 }
 
 /*
@@ -181,6 +187,10 @@ void send_dir()
 		return;
 	}
 	save_into_file(server_fd, stdout);
+
+    char recBUF[MAX_BUFF_SIZE];
+    receive_message(recBUF);
+    fprintf(stdout,"%s\n",recBUF);
 }
 
 /*
@@ -196,7 +206,55 @@ void send_show(const char *file)
 		return;
 	}
 	save_into_file(server_fd, stdout);
+    char recBUF[MAX_BUFF_SIZE];
+    receive_message(recBUF);
+    fprintf(stdout,"%s\n",recBUF);
+	//TODO check return of server
 	close_data_connection();
+}
+uint16_t send_cd(const char * path){
+    uint16_t rep = send_cmd("CWD",path,_debug_);
+
+    if(rep != DIRECTORY_CHANGE_SUCCESS){
+        fprintf(stdout,"[-] Operation failed [error_code = %d]\n",rep);
+        return -1;
+    }
+    return rep;
+}
+
+
+uint16_t send_mkdir(const char* dir){
+    uint16_t rep = send_cmd("MKD",dir,_debug_);
+
+    if(rep != DIRECTORY_CREATED_SUCCESS){
+        fprintf(stdout,"[-] Operation mkd failed [error_code = %d]\n",rep);
+        return -1;
+    }
+
+
+    return rep;
+}
+uint16_t send_rmdir(const char* dir){
+    uint16_t rep = send_cmd("RMD",dir,_debug_);
+
+    if(rep != DIRECTORY_CHANGE_SUCCESS){
+        fprintf(stdout,"[-] Operation rmd failed [error_code = %d]\n",rep);
+        return -1;
+    }
+    return rep;
+
+}
+uint16_t send_pwd(){
+    uint16_t rep = send_cmd("PWD","",_debug_);
+
+    if(rep != OK){
+        fprintf(stdout,"[-] Operation pwd failed [error_code = %d]\n",rep);
+        return -1;
+    }
+    char recBUF[MAX_BUFF_SIZE];
+    receive_message(recBUF);
+    fprintf(stdout,"[+] pwd : %s\n",recBUF);
+    return rep;
 }
 
 void get_file(const char*file){
@@ -209,11 +267,17 @@ void get_file(const char*file){
     getFileNameFromPath(file);
     FILE* fptr = fopen(file,"w");
     save_into_file(server_fd, fptr);
+
+    char recBUF[MAX_BUFF_SIZE];
+    receive_message(recBUF);
+    fprintf(stdout,"%s\n",recBUF);
+
     close_data_connection();
 }
 
+
 /*
-* Cette fonction cree une connexion TCP selon le mode courant et
+* Cette fonction cree une connexion TCP selon le mode courante et
  * renvoie un descripteur de fichier de socket ou on va recevoir les donnés.
 */
 int create_data_channel(const char *cmd, const char *args, int print_cmd)
@@ -281,8 +345,11 @@ int save_into_file(int fd, FILE * out)
 	FD_SET(fd, &readfds);
 	int rc;
 	int ret;
-	for (;;) {
-		rc = select(fd + 1, &readfds, NULL, NULL, &tv);
+	long int byte_received = 0;
+	int total;
+    float current_processed;
+    for (;;) {
+        rc = select(fd + 1, &readfds, NULL, NULL, &tv);
 		if (rc < 0) {
 			perror("[-] select rc < 0");
 			ret = -1;
@@ -303,12 +370,18 @@ int save_into_file(int fd, FILE * out)
 			} else {
 			    char* outt = buff;
 				int writen = fprintf(out, "%s", outt);
-				fprintf(stdout,"received : %zd(bytes), writen : %d(bytes)\n",n,writen);
+				byte_received += writen;
+				fflush(out);
+				if(out != stdout){
+                    fprintf(stdout,"\rreceived : %ld (bytes)", byte_received);
+                    fflush(stdout);
+                }
 			}
 		}
 	}
 	close(fd);
+	fd = -1;
 	if (out == stdout || out == stderr)
-		fprintf(stdout, "\n");
+		fprintf(out, "\n");
 	return ret;
 }

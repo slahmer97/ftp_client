@@ -43,9 +43,6 @@ void open_data_connection(_con_socket* zsock,char *host, uint16_t port);
 void destroy_data_socket();
 void send_message(const char *);
 
-void receive_data(char *);
-int send_file(const char *);
-int receive_file(char *);
 
 int open_act_connection();
 int open_pasv_connection();
