@@ -247,7 +247,7 @@ uint16_t send_rmdir(const char* dir){
 uint16_t send_pwd(){
     uint16_t rep = send_cmd("PWD","",_debug_);
 
-    if(rep != OK){
+    if(rep != DIRECTORY_CREATED_SUCCESS){
         fprintf(stdout,"[-] Operation pwd failed [error_code = %d]\n",rep);
         return -1;
     }
