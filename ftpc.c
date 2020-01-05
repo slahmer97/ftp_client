@@ -8,18 +8,23 @@
 #include <sys/ioctl.h>
 
 /*
+* Cette fonction parse une chaine de caracteres representant un chemin
+* vers un fichier, et renvoie uniquement le nom de ce dernier.
+*/
+static char *getFileNameFromPath(const char *path)
+{
+	if (path)
+		for (size_t i = strlen(path) - 1; i; i--)
+			if (path[i] == '/')
+				return (char *)&path[i + 1];
+
+	return (char *)path;
+}
+
+/*
 * Cette fonction parse une chaine de caracteres et renvoie
 * la commande FTP correspondante.
 */
-static char* getFileNameFromPath(const char* path)
-{
-    if(path)
-        for(size_t i = strlen(path) - 1; i; i--)
-            if (path[i] == '/')
-                return (char*)&path[i+1];
-
-    return (char*)path;
-}
 enum FTP_C_CMD get_command(const char *cmd)
 {
 	if (strncmp("open", cmd, 4) == 0)
@@ -52,20 +57,19 @@ enum FTP_C_CMD get_command(const char *cmd)
 		return CD;
 	else if (strncmp("mkd", cmd, 3) == 0)
 		return MKDIR;
-    else if (strncmp("pwd", cmd, 3) == 0)
-        return PWD;
+	else if (strncmp("pwd", cmd, 3) == 0)
+		return PWD;
 	else if (strncmp("rmd", cmd, 3) == 0)
 		return RMDIR;
 	else if (strncmp("hist", cmd, 4) == 0)
 		return HISTORY;
 	else if (strncmp("help", cmd, 4) == 0)
 		return HELP;
-    else if (strncmp("binary", cmd, 6) == 0)
-        return BINARY;
-    else if (strncmp("ascii", cmd, 5) == 0)
-        return ASCII;
+	else if (strncmp("binary", cmd, 6) == 0)
+		return BINARY;
+	else if (strncmp("ascii", cmd, 5) == 0)
+		return ASCII;
 	return INVALID_CMD;
-
 }
 
 /*
@@ -132,11 +136,14 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 	return resp_code;
 }
 
-uint16_t send_binary(){
-    return send_cmd("TYPE","I",_debug_);
+uint16_t send_binary()
+{
+	return send_cmd("TYPE", "I", _debug_);
 }
-uint16_t send_ascii(){
-    return send_cmd("TYPE","A",_debug_);
+
+uint16_t send_ascii()
+{
+	return send_cmd("TYPE", "A", _debug_);
 }
 
 /*
@@ -146,8 +153,7 @@ uint16_t send_ascii(){
 uint16_t send_username(const char *username)
 {
 	uint16_t resp = send_cmd("USER", username, _debug_);
-
-    return resp;
+	return resp;
 }
 
 /*
@@ -169,9 +175,9 @@ int send_password(const char *password)
 void send_ciao()
 {
 	send_cmd("QUIT", "", _debug_);
-    char recBUF[MAX_BUFF_SIZE];
-    receive_message(recBUF);
-    fprintf(stdout,"%s\n",recBUF);
+	char recBUF[MAX_BUFF_SIZE];
+	receive_message(recBUF);
+	fprintf(stdout, "%s\n", recBUF);
 }
 
 /*
@@ -188,9 +194,9 @@ void send_dir()
 	}
 	save_into_file(server_fd, stdout);
 
-    char recBUF[MAX_BUFF_SIZE];
-    receive_message(recBUF);
-    fprintf(stdout,"%s\n",recBUF);
+	char recBUF[MAX_BUFF_SIZE];
+	receive_message(recBUF);
+	fprintf(stdout, "%s\n", recBUF);
 }
 
 /*
@@ -206,79 +212,106 @@ void send_show(const char *file)
 		return;
 	}
 	save_into_file(server_fd, stdout);
-    char recBUF[MAX_BUFF_SIZE];
-    receive_message(recBUF);
-    fprintf(stdout,"%s\n",recBUF);
+	char recBUF[MAX_BUFF_SIZE];
+	receive_message(recBUF);
+	fprintf(stdout, "%s\n", recBUF);
 	//TODO check return of server
 	close_data_connection();
 }
-uint16_t send_cd(const char * path){
-    uint16_t rep = send_cmd("CWD",path,_debug_);
 
-    if(rep != DIRECTORY_CHANGE_SUCCESS){
-        fprintf(stdout,"[-] Operation failed [error_code = %d]\n",rep);
-        return -1;
-    }
-    return rep;
+/*
+* Cette fonction est appelee a la suite d'une commande CD de l'utilisateur,
+* le resultat du serveur est affiche sur stdout.
+*/
+uint16_t send_cd(const char *path)
+{
+	uint16_t rep = send_cmd("CWD", path, _debug_);
+
+	if (rep != DIRECTORY_CHANGE_SUCCESS) {
+		fprintf(stdout, "[-] Operation failed [error_code = %d]\n",
+			rep);
+		return -1;
+	}
+	return rep;
 }
 
+/*
+* Cette fonction est appelee a la suite d'une commande CD de l'utilisateur.
+* Elle envoie la requete au serveur, puis affiche sa reponse.
+*/
+uint16_t send_mkdir(const char *dir)
+{
+	uint16_t rep = send_cmd("MKD", dir, _debug_);
 
-uint16_t send_mkdir(const char* dir){
-    uint16_t rep = send_cmd("MKD",dir,_debug_);
-
-    if(rep != DIRECTORY_CREATED_SUCCESS){
-        fprintf(stdout,"[-] Operation mkd failed [error_code = %d]\n",rep);
-        return -1;
-    }
-
-
-    return rep;
-}
-uint16_t send_rmdir(const char* dir){
-    uint16_t rep = send_cmd("RMD",dir,_debug_);
-
-    if(rep != DIRECTORY_CHANGE_SUCCESS){
-        fprintf(stdout,"[-] Operation rmd failed [error_code = %d]\n",rep);
-        return -1;
-    }
-    return rep;
-
-}
-uint16_t send_pwd(){
-    uint16_t rep = send_cmd("PWD","",_debug_);
-
-    if(rep != DIRECTORY_CREATED_SUCCESS){
-        fprintf(stdout,"[-] Operation pwd failed [error_code = %d]\n",rep);
-        return -1;
-    }
-    char recBUF[MAX_BUFF_SIZE];
-    receive_message(recBUF);
-    fprintf(stdout,"[+] pwd : %s\n",recBUF);
-    return rep;
+	if (rep != DIRECTORY_CREATED_SUCCESS) {
+		fprintf(stdout, "[-] Operation mkd failed [error_code = %d]\n",
+			rep);
+		return -1;
+	}
+	return rep;
 }
 
-void get_file(const char*file){
-    int server_fd = create_data_channel("RETR", file, _debug_);
-    if (server_fd <= 0) {
-        fprintf(stdout, "[!] Operation failed [error_code = %d]\n",
-                -server_fd);
-        return;
-    }
-    getFileNameFromPath(file);
-    FILE* fptr = fopen(file,"w");
-    save_into_file(server_fd, fptr);
+/*
+* Cette fonction est appelee a la suite d'une commande RMDIR de l'utilisateur,
+* le resultat du serveur est affiche sur stdout.
+*/
+uint16_t send_rmdir(const char *dir)
+{
+	uint16_t rep = send_cmd("RMD", dir, _debug_);
 
-    char recBUF[MAX_BUFF_SIZE];
-    receive_message(recBUF);
-    fprintf(stdout,"%s\n",recBUF);
-
-    close_data_connection();
+	if (rep != DIRECTORY_CHANGE_SUCCESS) {
+		fprintf(stdout, "[-] Operation rmd failed [error_code = %d]\n",
+			rep);
+		return -1;
+	}
+	return rep;
 }
 
+/*
+* Cette fonction est appelee a la suite d'une commande PWD de l'utilisateur.
+* Elle envoie la requete au serveur, puis affiche sa reponse.
+*/
+uint16_t send_pwd()
+{
+	uint16_t rep = send_cmd("PWD", "", _debug_);
+
+	if (rep != DIRECTORY_CREATED_SUCCESS) {
+		fprintf(stdout, "[-] Operation pwd failed [error_code = %d]\n",
+			rep);
+		return -1;
+	}
+	char recBUF[MAX_BUFF_SIZE];
+	receive_message(recBUF);
+	fprintf(stdout, "[+] pwd : %s\n", recBUF);
+	return rep;
+}
+
+/*
+* Cette fonction est appelee pour demander au serveur de transmettre
+* le fichier "file". Ce dernier est ensuite enregistre.
+*/
+void get_file(const char *file)
+{
+	int server_fd = create_data_channel("RETR", file, _debug_);
+	if (server_fd <= 0) {
+		fprintf(stdout, "[!] Operation failed [error_code = %d]\n",
+			-server_fd);
+		return;
+	}
+	getFileNameFromPath(file);
+	FILE *fptr = fopen(file, "w");
+	save_into_file(server_fd, fptr);
+
+	char recBUF[MAX_BUFF_SIZE];
+	receive_message(recBUF);
+	fprintf(stdout, "%s\n", recBUF);
+
+	close_data_connection();
+}
 
 /*
 * Cette fonction cree une connexion TCP selon le mode courante et
- * renvoie un descripteur de fichier de socket ou on va recevoir les donnés.
+* renvoie un descripteur de fichier de socket ou on va recevoir les donnés.
 */
 int create_data_channel(const char *cmd, const char *args, int print_cmd)
 {
@@ -347,9 +380,9 @@ int save_into_file(int fd, FILE * out)
 	int ret;
 	long int byte_received = 0;
 	int total;
-    float current_processed;
-    for (;;) {
-        rc = select(fd + 1, &readfds, NULL, NULL, &tv);
+	float current_processed;
+	for (;;) {
+		rc = select(fd + 1, &readfds, NULL, NULL, &tv);
 		if (rc < 0) {
 			perror("[-] select rc < 0");
 			ret = -1;
@@ -358,8 +391,8 @@ int save_into_file(int fd, FILE * out)
 			ret = 1;
 			break;
 		} else {
-            memset(buff,0,MAX_BUFF_SIZE);
-            n = read(fd, buff, (MAX_BUFF_SIZE - 1));
+			memset(buff, 0, MAX_BUFF_SIZE);
+			n = read(fd, buff, (MAX_BUFF_SIZE - 1));
 			if (n == 0) {
 				ret = 1;
 				break;
@@ -368,14 +401,16 @@ int save_into_file(int fd, FILE * out)
 				ret = -1;
 				break;
 			} else {
-			    char* outt = buff;
+				char *outt = buff;
 				int writen = fprintf(out, "%s", outt);
 				byte_received += writen;
 				fflush(out);
-				if(out != stdout){
-                    fprintf(stdout,"\rreceived : %ld (bytes)", byte_received);
-                    fflush(stdout);
-                }
+				if (out != stdout) {
+					fprintf(stdout,
+						"\rreceived : %ld (bytes)",
+						byte_received);
+					fflush(stdout);
+				}
 			}
 		}
 	}
