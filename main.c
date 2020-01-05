@@ -2,6 +2,7 @@
 #include "ftpc.h"
 #include <stdlib.h>
 #include <stdio.h>
+
 enum Mode _mode_;
 int _debug_;
 enum STATUS _status_;
@@ -193,7 +194,7 @@ void cmd_handler(const char *__cmd)
 		//TODO
 		break;
 	case HELP:
-		//TODO
+		show_help();
 		break;
 	case ASCII:
 		if (_status_ == DISCONNECTED)

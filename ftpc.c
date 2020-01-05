@@ -7,6 +7,22 @@
 #include <asm/ioctls.h>
 #include <sys/ioctl.h>
 
+#define NB_CMDS 14
+char *all_cmds[NB_CMDS] = {"open", "dir", "show", "ciao", "exit", "debugon",
+	"debugoff", "passiveon", "passiveoff", "get", "cd", "pwd",
+	"binary", "ascii"};
+
+/*
+* Cette fonction est appelee à la suite de la commande "help".
+* Elle affiche toutes les commandes disponibles.
+*/
+void show_help()
+{
+	printf("Here's the list of commands:\n");
+	for (int i = 0; i < NB_CMDS; i++)
+		printf("\t%s\n", all_cmds[i]);
+}
+
 /*
 * Cette fonction parse une chaine de caracteres representant un chemin
 * vers un fichier, et renvoie uniquement le nom de ce dernier.

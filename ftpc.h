@@ -67,6 +67,8 @@ void debugf(int flag);
 
 enum FTP_C_CMD get_command(const char *);
 
+void show_help();
+
 uint16_t send_binary();
 uint16_t send_ascii();
 uint16_t send_cmd(const char *cmd, const char *args, int print_cmd);
