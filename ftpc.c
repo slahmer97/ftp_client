@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 
 #define NB_CMDS 14
+int _debug_;
 char *all_cmds[NB_CMDS] = {"open", "dir", "show", "ciao", "exit", "debugon",
 	"debugoff", "passiveon", "passiveoff", "get", "cd", "pwd",
 	"binary", "ascii"};
@@ -137,7 +138,7 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 	char recBUF[MAX_BUFF_SIZE];
 	receive_message(recBUF);
 
-	if (print_cmd)
+	if (_debug_)
 		fprintf(stdout, "[<--] %s", recBUF);
 
 	char resp[4];
@@ -231,6 +232,11 @@ void send_show(const char *file)
 	char recBUF[MAX_BUFF_SIZE];
 	receive_message(recBUF);
 	fprintf(stdout, "%s\n", recBUF);
+	char rett[4];
+	rett[0]=recBUF[0];rett[1]=recBUF[1];rett[2]=recBUF[2];rett[0]=0;
+	uint16_t ret = *rett;
+    if(ret != 226)
+        fprintf(stdout,"[-] operation failed!\n");
 	//TODO check return of server
 	close_data_connection();
 }

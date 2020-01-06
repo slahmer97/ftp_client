@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "ftpc.h"
 #include <stdlib.h>
-#include <stdio.h>
-
+#include "glob.h"
 enum Mode _mode_;
 int _debug_;
 enum STATUS _status_;
@@ -20,7 +19,7 @@ int main(int argc, char *argv[])
 {
 	init_das();
 	login(0);
-	debugf(1);		// debug mode in off mode
+	debugf(0);		// debug mode in off mode
 	passivef(0);		// active mode by default
 	int with_cli_arg = 0;
 	if (argc > 1)
@@ -75,7 +74,6 @@ void cmd_handler(const char *__cmd)
 		open_data_connection(getsockaddr(), param, 21);
 		receive_message(recbuff);
 		passivef(0);
-		debugf(1);
  retry:	;
 		try_count++;
 		fprintf(stdout, "Username : ");
@@ -91,7 +89,7 @@ void cmd_handler(const char *__cmd)
 			fprintf(stdout, "[!] Login failed\n");
 			if (try_count == 2) {
 				fprintf(stderr, "[-] Try count exceeded\n");
-				exit(EXIT_FAILURE);
+                return;
 			}
 			goto retry;
 		}

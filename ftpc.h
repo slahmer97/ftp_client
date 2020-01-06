@@ -62,7 +62,6 @@ enum TEXT_MODE{
 };
 extern enum STATUS _status_;
 extern enum Mode _mode_;
-extern int _debug_;
 extern enum TEXT_MODE _trans_mode;
 void login(int flag);
 void passivef(int flag);

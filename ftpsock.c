@@ -9,12 +9,11 @@
 #include <stdlib.h>
 #include <asm/errno.h>
 #include <errno.h>
-
 _con_socket sock;
 
 _con_socket p_socket;
 _d_sock a_socket;
-
+int _debug_;
 /*
 * Retourne un pointeur sur le socket global "sock".
 */
