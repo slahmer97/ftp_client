@@ -18,12 +18,12 @@
 
 typedef struct __socket__ _con_socket;
 typedef struct __dsock__ _d_sock;
+
 struct __socket__ {
 	int fd;
 	struct sockaddr_in _host_addr;
 	struct hostent *_host;
 	struct sockaddr_in _myAddr;
-
 };
 
 struct __dsock__ {
@@ -32,22 +32,23 @@ struct __dsock__ {
 	uint16_t _port;
 	uint32_t _addr;
 };
-_con_socket* getsockaddr();
+
+_con_socket *getsockaddr();
 uint16_t get_aport();
 uint32_t get_aaddr();
 int get_afd();
 
 int receive_message(char *);
 
-void open_data_connection(_con_socket* zsock,char *host, uint16_t port);
+void open_data_connection(_con_socket * zsock, char *host, uint16_t port);
 void destroy_data_socket();
 void send_message(const char *);
-
 
 int open_act_connection();
 int open_pasv_connection();
 
-
 void close_data_connection();
 void init_das();
+
+
 #endif				//FTP_CLIENT_FTPSOCK_H

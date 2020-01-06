@@ -2,11 +2,12 @@
 #include "ftpc.h"
 #include <stdlib.h>
 #include <stdio.h>
+
 enum Mode _mode_;
 int _debug_;
 enum STATUS _status_;
 char current_user[250] = { 0 };
-enum TEXT_MODE _trans_mode;
+
 int running = 1;
 int try_count = 0;
 
@@ -15,21 +16,31 @@ void cmd_handler(const char *cmd);
 /*
 * Le main !
 */
-int main()
+int main(int argc, char *argv[])
 {
-    _trans_mode = TASCII;
-    init_das();
+	init_das();
 	login(0);
 	debugf(1);		// debug mode in off mode
 	passivef(0);		// active mode by default
-
+	int with_cli_arg = 0;
+	if (argc > 1)
+		with_cli_arg = 1;
 	while (running) {
 		char buff[MAX_FTP_CMD_BUF] = { 0 };
 		if (_status_ == CONNECTED)
 			fprintf(stdout, "%s@Ftp> ", current_user);
-		else
-			fprintf(stdout, "Ftp> ");
+		else {
+			if (with_cli_arg) {		// takes entry from cli arguments
+				fprintf(stdout, "Ftp> open %s\n", argv[1]);
+				strcat(strcat(strcat(buff, "open "), argv[1]), "\n");
+				with_cli_arg = 0;
+				goto with_cli;
+			} else {
+				fprintf(stdout, "Ftp> ");
+			}
+		}
 		fgets(buff, sizeof(buff), stdin);
+ with_cli:
 		if (buff[0] == '\n')
 			continue;
 		cmd_handler(buff);
@@ -61,7 +72,7 @@ void cmd_handler(const char *__cmd)
 		char username[250] = { 0 };
 		char password[250] = { 0 };
 		char recbuff[MAX_BUFF_SIZE] = { 0 };
-		open_data_connection(getsockaddr(),param, 21);
+		open_data_connection(getsockaddr(), param, 21);
 		receive_message(recbuff);
 		passivef(0);
 		debugf(1);
@@ -70,9 +81,9 @@ void cmd_handler(const char *__cmd)
 		fprintf(stdout, "Username : ");
 		fgets(username, sizeof(username), stdin);	// read string
 		int pasw_dmd = send_username(username);
-		if(pasw_dmd != PASSWORD_DEMAND){
-            fprintf(stdout, "[-] Rejected Message,\n");
-        }
+		if (pasw_dmd != PASSWORD_DEMAND) {
+			fprintf(stdout, "[-] Rejected Message,\n");
+		}
 		fprintf(stdout, "Password : ");
 		fgets(password, sizeof(password), stdin);	// read string
 		int is_connect = send_password(password);
@@ -135,8 +146,8 @@ void cmd_handler(const char *__cmd)
 	case GET_FILE:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-        param = command + 4;
-        get_file(param);
+		param = command + 4;
+		get_file(param);
 		break;
 	case SEND_FILE:
 		if (_status_ == DISCONNECTED)
@@ -155,25 +166,25 @@ void cmd_handler(const char *__cmd)
 	case CD:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-        param = command + 3;
-        send_cd(param);
+		param = command + 3;
+		send_cd(param);
 		break;
-    case PWD:
-        if (_status_ == DISCONNECTED)
-            goto login_required;
-        send_pwd();
-        break;
+	case PWD:
+		if (_status_ == DISCONNECTED)
+			goto login_required;
+		send_pwd();
+		break;
 	case MKDIR:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-        param = command + 4;
-        send_mkdir(param);
+		param = command + 4;
+		send_mkdir(param);
 		break;
 	case RMDIR:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-        param = command + 4;
-        send_rmdir(param);
+		param = command + 4;
+		send_rmdir(param);
 		break;
 	case INVALID_CMD:
 	default:
@@ -183,20 +194,18 @@ void cmd_handler(const char *__cmd)
 		//TODO
 		break;
 	case HELP:
-		//TODO
+		show_help();
 		break;
-    case ASCII:
-        if (_status_ == DISCONNECTED)
-            goto login_required;
-        send_ascii();
-        _trans_mode = TASCII;
-        break;
-    case BINARY:
-        if (_status_ == DISCONNECTED)
-            goto login_required;
-        send_binary();
-        _trans_mode = TBINARY;
-        break;
+	case ASCII:
+		if (_status_ == DISCONNECTED)
+			goto login_required;
+		send_ascii();
+		break;
+	case BINARY:
+		if (_status_ == DISCONNECTED)
+			goto login_required;
+		send_binary();
+		break;
 	}
 	return;
  login_required:

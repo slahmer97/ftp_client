@@ -15,15 +15,25 @@ _con_socket sock;
 _con_socket p_socket;
 _d_sock a_socket;
 
-_con_socket* getsockaddr(){
-    return &sock;
+/*
+* Retourne un pointeur sur le socket global "sock".
+*/
+_con_socket *getsockaddr()
+{
+	return &sock;
 }
-void init_das(){
-    memset((void*)&a_socket,0,sizeof(_d_sock));
-    memset((void*)&p_socket,0,sizeof(_con_socket));
-    p_socket.fd = -1;
-    a_socket.fd = -1;
+
+/*
+* Initialise a zero les deux sockets globaux "p_socket" et "a_socket".
+*/
+void init_das()
+{
+	memset((void *)&a_socket, 0, sizeof(_d_sock));
+	memset((void *)&p_socket, 0, sizeof(_con_socket));
+	p_socket.fd = -1;
+	a_socket.fd = -1;
 }
+
 /*
 * Cette fonction initialise une connexion TCP et l'enregistre dans "fd".
 */
@@ -42,42 +52,42 @@ static void init_tcp_socket(int *fd, struct sockaddr_in *_host_addr)
 * Cette fonction initialise une connexion avec
 * un serveur FTP "host" sur "port".
 */
-void open_data_connection(_con_socket* zsock,char *host, uint16_t port)
+void open_data_connection(_con_socket * zsock, char *host, uint16_t port)
 {
 	init_tcp_socket(&zsock->fd, &zsock->_host_addr);
-    zsock->_host = gethostbyname(host);
+	zsock->_host = gethostbyname(host);
 	if (zsock->_host == NULL) {
 		close(zsock->fd);
-        zsock->fd = -1;
+		zsock->fd = -1;
 		fprintf(stderr, "[-] Lookup Failed: %s\n",
 			hstrerror(ECONNREFUSED));
 		return;
 	}
 	memset((char *)&zsock->_host_addr, 0, sizeof(sock._host_addr));
-    zsock->_host_addr.sin_family = AF_INET;
+	zsock->_host_addr.sin_family = AF_INET;
 	memcpy((char *)&zsock->_host_addr.sin_addr.s_addr,
 	       (char *)sock._host->h_addr, sock._host->h_length);
-    zsock->_host_addr.sin_port = htons(port);
+	zsock->_host_addr.sin_port = htons(port);
 	if (connect
 	    (zsock->fd, (struct sockaddr *)&zsock->_host_addr,
 	     sizeof(zsock->_host_addr)) != 0) {
 		close(zsock->fd);
-        zsock->fd = -1;
-        perror("[-] Can't connect to host\n");
+		zsock->fd = -1;
+		perror("[-] Can't connect to host\n");
 		return;
 	}
 	socklen_t len = sizeof(zsock->_myAddr);
-	if (getsockname(zsock->fd, (struct sockaddr *)&zsock->_myAddr, &len) < 0) {
+	if (getsockname(zsock->fd, (struct sockaddr *)&zsock->_myAddr, &len) <
+	    0) {
 		close(zsock->fd);
-        zsock->fd = -1;
-        perror("[-] getsockname Error\n");
+		zsock->fd = -1;
+		perror("[-] getsockname Error\n");
 		return;
 	}
 	fprintf(stdout, "ftp client RFC-959\n");
 	fprintf(stdout,
 		"Connection established, waiting for welcome message...\n");
 }
-
 
 /*
 * Cette fonction ouvre un socket et attend que le serveur FTP se connecte.
@@ -93,13 +103,13 @@ int open_act_connection()
 		//fprintf(stderr, "[-] error when binding socket\n");
 		perror("[-] biding failed\n");
 		close(a_socket.fd);
-        a_socket.fd = -1;
+		a_socket.fd = -1;
 		return -1;
 	}
 
 	if (listen(a_socket.fd, 1) != 0) {	// allow just server connection {one connection}
 		close(a_socket.fd);
-        a_socket.fd = -1;
+		a_socket.fd = -1;
 		perror("[-] error when listening socket\n");
 		return -1;
 	}
@@ -108,7 +118,7 @@ int open_act_connection()
 	if (getsockname(a_socket.fd, (struct sockaddr *)&sock._myAddr, &len) <
 	    0) {
 		close(a_socket.fd);
-        a_socket.fd = -1;
+		a_socket.fd = -1;
 		perror("[-] error when getsockname\n");
 		return -1;
 	}
@@ -148,15 +158,16 @@ int open_pasv_connection()
 		return -replay_code;
 	}
 	input = recBUF + 4;
-	while (*(input++) != '(');
-    int addr1,addr2,addr3,addr4,port1,port2;
-	sscanf(input,"%d,%d,%d,%d,%d,%d).\r\n",&addr1,&addr2,&addr3,&addr4,&port1,&port2);
+	while (*(input++) != '(') ;
+	int addr1, addr2, addr3, addr4, port1, port2;
+	sscanf(input, "%d,%d,%d,%d,%d,%d).\r\n", &addr1, &addr2, &addr3, &addr4,
+	       &port1, &port2);
 	char host[18];
-	snprintf(host,18,"%d.%d.%d.%d",addr1,addr2,addr3,addr4);
-    uint16_t port = port1*1000+port2;
-    open_data_connection(&p_socket,host,port);
-    int ret = p_socket.fd;
-    return ret;
+	snprintf(host, 18, "%d.%d.%d.%d", addr1, addr2, addr3, addr4);
+	uint16_t port = port1 * 1000 + port2;
+	open_data_connection(&p_socket, host, port);
+	int ret = p_socket.fd;
+	return ret;
 }
 
 /*
@@ -220,26 +231,30 @@ int receive_message(char *msg)
 {
 	if (msg == NULL) {
 		fprintf(stderr, "[-] received msg Error : msg = NULL\n");
-        return -99999;
+		return -99999;
 	}
 	memset(msg, 0, MAX_BUFF_SIZE);
 	ssize_t n;
 	n = read(sock.fd, msg, MAX_BUFF_SIZE);
 	if (n < 0) {
 		fprintf(stderr, "[-] received msg Error : N < 0 [%zd] \n", n);
-        return n;
+		return n;
 	}
 	return n;
 }
 
-void close_data_connection(){
-    if(a_socket.fd >= 0){
-        close(a_socket.fd);
-        memset((void*)&a_socket,0,sizeof(_d_sock));
-    }
-    if(p_socket.fd >= 0){
-        close(p_socket.fd);
-        memset((void*)&p_socket,0,sizeof(_con_socket));
-    }
+/*
+* Cette fonction ferme les deux connexions FTP
+* (typiquement sur les ports 21 et 20).
+*/
+void close_data_connection()
+{
+	if (a_socket.fd >= 0) {
+		close(a_socket.fd);
+		memset((void *)&a_socket, 0, sizeof(_d_sock));
+	}
+	if (p_socket.fd >= 0) {
+		close(p_socket.fd);
+		memset((void *)&p_socket, 0, sizeof(_con_socket));
+	}
 }
-
