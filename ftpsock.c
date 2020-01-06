@@ -146,6 +146,8 @@ int get_afd()
 */
 int open_pasv_connection()
 {
+    if(_debug_)
+        fprintf(stdout,"[-->] PASV\r\n");
 	send_message("PASV\r\n");
 	char recBUF[MAX_BUFF_SIZE];
 	char *input;
