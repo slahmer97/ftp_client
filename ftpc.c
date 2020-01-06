@@ -141,13 +141,22 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 	if (_debug_)
 		fprintf(stdout, "[<--] %s", recBUF);
 
-	char resp[4];
-	resp[3] = 0;
-	resp[0] = recBUF[0];
-	resp[1] = recBUF[1];
-	resp[2] = recBUF[2];
+    char resp[4];
+    resp[3] = 0;
+    resp[0] = recBUF[0];
+    resp[1] = recBUF[1];
+    resp[2] = recBUF[2];
 
-	uint16_t resp_code = (uint16_t) atoi(resp);
+    uint16_t resp_code = (uint16_t) atoi(resp);
+
+	if(resp_code == 257 && strncmp(cmd,"PWD",3) == 0){
+        char *tmp = recBUF+5;
+        while (*tmp != '"')
+            printf("%c",*(tmp++));
+
+        printf("\n");
+	}
+
 	free(send_buff);
 
 	return resp_code;
@@ -213,7 +222,8 @@ void send_dir()
 
 	char recBUF[MAX_BUFF_SIZE];
 	receive_message(recBUF);
-	fprintf(stdout, "%s\n", recBUF);
+	if(_debug_)
+	    fprintf(stdout, "%s\n", recBUF);
 }
 
 /*
@@ -231,11 +241,10 @@ void send_show(const char *file)
 	save_into_file(server_fd, stdout);
 	char recBUF[MAX_BUFF_SIZE];
 	receive_message(recBUF);
-	fprintf(stdout, "%s\n", recBUF);
-	char rett[4];
-	rett[0]=recBUF[0];rett[1]=recBUF[1];rett[2]=recBUF[2];rett[0]=0;
-	uint16_t ret = *rett;
-    if(ret != 226)
+	if(_debug_)
+	    fprintf(stdout, "%s\n", recBUF);
+
+    if(strncmp(recBUF,"226",3) != 0)
         fprintf(stdout,"[-] operation failed!\n");
 	//TODO check return of server
 	close_data_connection();
@@ -302,9 +311,7 @@ uint16_t send_pwd()
 			rep);
 		return -1;
 	}
-	char recBUF[MAX_BUFF_SIZE];
-	receive_message(recBUF);
-	fprintf(stdout, "[+] pwd : %s\n", recBUF);
+	//fprintf(stdout, "[+] pwd : %s\n", recBUF);
 	return rep;
 }
 

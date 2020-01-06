@@ -42,6 +42,10 @@ int main(int argc, char *argv[])
  with_cli:
 		if (buff[0] == '\n')
 			continue;
+		if(strncmp(buff,"clear",5) == 0){
+		    system("clear");
+            continue;
+		}
 		cmd_handler(buff);
 	}
 	destroy_data_socket();
