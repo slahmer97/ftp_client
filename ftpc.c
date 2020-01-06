@@ -265,7 +265,12 @@ void get_file(const char*file){
         return;
     }
     getFileNameFromPath(file);
-    FILE* fptr = fopen(file,"w");
+    FILE* fptr;
+    if(_trans_mode == BINARY)
+        fptr= fopen(file,"wb");
+    else
+        fptr= fopen(file,"w");
+
     save_into_file(server_fd, fptr);
 
     char recBUF[MAX_BUFF_SIZE];
@@ -380,7 +385,6 @@ int save_into_file(int fd, FILE * out)
 		}
 	}
 	close(fd);
-	fd = -1;
 	if (out == stdout || out == stderr)
 		fprintf(out, "\n");
 	return ret;

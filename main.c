@@ -6,7 +6,7 @@ enum Mode _mode_;
 int _debug_;
 enum STATUS _status_;
 char current_user[250] = { 0 };
-
+enum TEXT_MODE _trans_mode;
 int running = 1;
 int try_count = 0;
 
@@ -17,6 +17,7 @@ void cmd_handler(const char *cmd);
 */
 int main()
 {
+    _trans_mode = TASCII;
     init_das();
 	login(0);
 	debugf(1);		// debug mode in off mode
@@ -188,11 +189,13 @@ void cmd_handler(const char *__cmd)
         if (_status_ == DISCONNECTED)
             goto login_required;
         send_ascii();
+        _trans_mode = TASCII;
         break;
     case BINARY:
         if (_status_ == DISCONNECTED)
             goto login_required;
         send_binary();
+        _trans_mode = TBINARY;
         break;
 	}
 	return;
