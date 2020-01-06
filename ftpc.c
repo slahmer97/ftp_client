@@ -135,12 +135,15 @@ uint16_t send_cmd(const char *cmd, const char *args, int print_cmd)
 		fprintf(stdout, "[-->] %s", send_buff);
 	send_message(send_buff);
 
-	char recBUF[MAX_BUFF_SIZE];
-	receive_message(recBUF);
-
+    char recBUF[MAX_BUFF_SIZE];
+    re:
+	memset(recBUF,0,MAX_BUFF_SIZE);
+    receive_message(recBUF);
 	if (_debug_)
 		fprintf(stdout, "[<--] %s", recBUF);
 
+	if(strncmp(&recBUF[3],"-",1) == 0)
+	    goto re;
     char resp[4];
     resp[3] = 0;
     resp[0] = recBUF[0];
