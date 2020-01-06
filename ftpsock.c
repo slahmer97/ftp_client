@@ -164,6 +164,7 @@ int open_pasv_connection()
 		fprintf(stdout, "[-] Passive mode rejected by server\n");
 		return -replay_code;
 	}
+
 	input = recBUF + 4;
 	while (*(input++) != '(') ;
 	int addr1, addr2, addr3, addr4, port1, port2;
@@ -172,6 +173,8 @@ int open_pasv_connection()
 	char host[18];
 	snprintf(host, 18, "%d.%d.%d.%d", addr1, addr2, addr3, addr4);
 	uint16_t port = port1 * 1000 + port2;
+	printf("Host : %s\tport : %d\n",host,port);
+
 	open_data_connection(&p_socket, host, port);
 	int ret = p_socket.fd;
 	return ret;
