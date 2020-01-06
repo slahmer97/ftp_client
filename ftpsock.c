@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <asm/errno.h>
 #include <errno.h>
+#include <arpa/inet.h>
+
 _con_socket sock;
 
 _con_socket p_socket;
@@ -93,9 +95,10 @@ void open_data_connection(_con_socket * zsock, char *host, uint16_t port)
 */
 int open_act_connection()
 {
-	init_tcp_socket(&a_socket.fd, &a_socket._host_addr);
+    init_tcp_socket(&a_socket.fd, &a_socket._host_addr);
 	a_socket._host_addr = sock._host_addr;
 	a_socket._host_addr.sin_port = htons(0);	//kernel will randomely chooose a free port for us
+    printf("Addr : %s\n", inet_ntoa(sock._host_addr.sin_addr));
 	if (bind
 	    (a_socket.fd, (struct sockaddr *)&a_socket._host_addr,
 	     sizeof(a_socket._host_addr)) != 0) {

@@ -221,6 +221,7 @@ void send_dir()
 			-server_fd);
 		return;
 	}
+
 	save_into_file(server_fd, stdout);
 
 	char recBUF[MAX_BUFF_SIZE];
