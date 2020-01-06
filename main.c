@@ -159,6 +159,20 @@ void cmd_handler(const char *__cmd)
 		if (_status_ == DISCONNECTED)
 			goto login_required;
 
+		char file1[MAX_BUFF_SIZE];
+		char file2[MAX_BUFF_SIZE];
+		memset(file1,0,MAX_BUFF_SIZE);
+        memset(file2,0,MAX_BUFF_SIZE);
+        param = command+4;
+        int i=0;
+		while(*param != ' ')
+		    file1[i++] = *(param++);
+		file1[i] = 0;
+		param++;
+		i = 0;
+        while(*param != 0)
+            file2[i++] = *(param++);
+        send_rename(file1,file2);
 		break;
 	case DEL_FILE:
 		if (_status_ == DISCONNECTED)

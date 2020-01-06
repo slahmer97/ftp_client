@@ -326,6 +326,25 @@ uint16_t send_delele(const char*file){
     return rep;
 }
 
+
+uint16_t send_rename(const char*file1,const char*file2){
+
+    uint16_t rep = send_cmd("RNFR",file1,_debug_);
+    if(rep != 350){
+        fprintf(stdout, "[-] 1-Operation rename failed [error_code = %d]\n",
+                rep);
+        return -1;
+    }
+
+    rep = send_cmd("RNTO",file2,_debug_);
+    if(rep != 250){
+        fprintf(stdout, "[-] 2-Operation rename failed [error_code = %d]\n",
+                rep);
+        return -1;
+    }
+
+    return rep;
+}
 /*
 * Cette fonction est appelee pour demander au serveur de transmettre
 * le fichier "file". Ce dernier est ensuite enregistre.

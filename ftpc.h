@@ -80,6 +80,7 @@ uint16_t send_mkdir(const char *);
 uint16_t send_rmdir(const char *);
 uint16_t send_pwd();
 uint16_t send_delele(const char*);
+uint16_t send_rename(const char*,const char*);
 int send_password(const char *);
 void send_ciao();
 void send_dir();
