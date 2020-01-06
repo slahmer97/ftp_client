@@ -47,6 +47,9 @@ static void init_tcp_socket(int *fd, struct sockaddr_in *_host_addr)
 	} else
 		printf("Datasocket was successfully created\n");
 	bzero(_host_addr, sizeof(*_host_addr));
+	_host_addr->sin_port = htons(0);
+	_host_addr->sin_addr.s_addr = htonl(INADDR_ANY);;
+	_host_addr->sin_family = AF_INET;
 }
 
 /*
@@ -96,7 +99,7 @@ void open_data_connection(_con_socket * zsock, char *host, uint16_t port)
 int open_act_connection()
 {
     init_tcp_socket(&a_socket.fd, &a_socket._host_addr);
-	a_socket._host_addr = sock._host_addr;
+
 	a_socket._host_addr.sin_port = htons(0);	//kernel will randomely chooose a free port for us
     printf("Addr : %s\n", inet_ntoa(sock._host_addr.sin_addr));
 	if (bind
