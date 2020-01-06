@@ -172,7 +172,9 @@ int open_pasv_connection()
 	       &port1, &port2);
 	char host[18];
 	snprintf(host, 18, "%d.%d.%d.%d", addr1, addr2, addr3, addr4);
-	uint16_t port = port2 * 1000 + port1;
+	
+	
+	int port = port1 * 256 + port2;
 	printf("Host : %s\tport : %d\t%d,%d\n",host,port,port1,port2);
 
 	open_data_connection(&p_socket, host, port);
