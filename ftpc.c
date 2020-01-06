@@ -315,6 +315,17 @@ uint16_t send_pwd()
 	return rep;
 }
 
+uint16_t send_delele(const char*file){
+    uint16_t rep = send_cmd("DELE", file, _debug_);
+
+    if(rep != 250){
+        fprintf(stdout, "[-] Operation dele failed [error_code = %d]\n",
+                rep);
+        return -1;
+    }
+    return rep;
+}
+
 /*
 * Cette fonction est appelee pour demander au serveur de transmettre
 * le fichier "file". Ce dernier est ensuite enregistre.

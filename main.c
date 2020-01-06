@@ -163,7 +163,8 @@ void cmd_handler(const char *__cmd)
 	case DEL_FILE:
 		if (_status_ == DISCONNECTED)
 			goto login_required;
-
+        param = command + 5;
+		send_delele(param);
 		break;
 	case CD:
 		if (_status_ == DISCONNECTED)
